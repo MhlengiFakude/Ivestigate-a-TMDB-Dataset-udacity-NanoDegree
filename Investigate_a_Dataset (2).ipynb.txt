@@ -1,0 +1,2220 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "\n",
+    "# Project: Investigate a Dataset - [Data Analysis of TMDb Movies Dataset]\n",
+    "\n",
+    "## Table of Contents\n",
+    "<ul>\n",
+    "<li><a href=\"#intro\">Introduction</a></li>\n",
+    "<li><a href=\"#wrangling\">Data Wrangling</a></li>\n",
+    "<li><a href=\"#eda\">Exploratory Data Analysis</a></li>\n",
+    "<li><a href=\"#conclusions\">Conclusions</a></li>\n",
+    "</ul>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "<a id='intro'></a>\n",
+    "## Introduction\n",
+    "\n",
+    "### Dataset Description \n",
+    "\n",
+    "\n",
+    "\n",
+    "> **TMDb** dataset consist of the information about  10 thousand movies including their ratings from diferent users for different genres,collected from\n",
+    "The Movie Database (TMDb).\n",
+    "\n",
+    "\n",
+    "The dataset have the following attributes\n",
+    "\n",
+    "Data Points (Rows): 10806\n",
+    "\n",
+    "Columns: 21\n",
+    "\n",
+    "Column Names:\n",
+    "\n",
+    "  * id: Identification Number\n",
+    "  * imdb_id: IMDb Identification Number\n",
+    "  * popularity: Popularity as a number\n",
+    "  * budget: Total Budget of the movie\n",
+    "  * revenue: Total Revenue of the movie\n",
+    "  * original_title: Title of the Movie\n",
+    "  * cast: main charecters of the movie\n",
+    "  * homepage: Movie website homepage\n",
+    "  * director: The person who directed the movie\n",
+    "  * tagline:\n",
+    "  * keywords:\n",
+    "  * overview: Overview of the movie\n",
+    "  * runtime: Duration of the movie\n",
+    "  * genres: genres the movie belong to\n",
+    "  * production_companies: companies produced the movie\n",
+    "  * release_date: The date the movie was released\n",
+    "  * vote_count: people voted for the movie\n",
+    "  * vote_average: The average vote rate out of 10\n",
+    "  * release_year: Released Year\n",
+    "  * budget_adj: Movie Budget including 2010 inflnation\n",
+    "  * revenue_adj': Movie Revenue including 2010 inflnation\n",
+    "\n",
+    "### Question(s) for Analysis\n",
+    "\n",
+    "#### Q1. who are the top ten directors that directed a movie with highest revenue?\n",
+    "#### - which movies they directed?\n",
+    "\n",
+    "#### Q2. what are the unique genres of the movies with top ten high revenues?\n",
+    "#### -Are they popular?\n",
+    "\n",
+    "#### Q3. Does the top 10 movies with high budget have high revenue? "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting pandas==0.25.0\n",
+      "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/1d/9a/7eb9952f4b4d73fbd75ad1d5d6112f407e695957444cb695cbb3cdab918a/pandas-0.25.0-cp36-cp36m-manylinux1_x86_64.whl (10.5MB)\n",
+      "\u001b[K    100% |████████████████████████████████| 10.5MB 3.4MB/s eta 0:00:01   10% |███▌                            | 1.1MB 26.5MB/s eta 0:00:01    24% |███████▊                        | 2.5MB 28.1MB/s eta 0:00:01    51% |████████████████▍               | 5.3MB 28.0MB/s eta 0:00:01    90% |█████████████████████████████   | 9.5MB 28.4MB/s eta 0:00:01\n",
+      "\u001b[?25hRequirement already satisfied, skipping upgrade: pytz>=2017.2 in /opt/conda/lib/python3.6/site-packages (from pandas==0.25.0) (2017.3)\n",
+      "Collecting numpy>=1.13.3 (from pandas==0.25.0)\n",
+      "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/45/b2/6c7545bb7a38754d63048c7696804a0d947328125d81bf12beaa692c3ae3/numpy-1.19.5-cp36-cp36m-manylinux1_x86_64.whl (13.4MB)\n",
+      "\u001b[K    100% |████████████████████████████████| 13.4MB 2.8MB/s eta 0:00:01   43% |██████████████                  | 5.9MB 29.9MB/s eta 0:00:01    65% |█████████████████████           | 8.8MB 30.0MB/s eta 0:00:01    86% |███████████████████████████▋    | 11.6MB 29.0MB/s eta 0:00:01\n",
+      "\u001b[?25hRequirement already satisfied, skipping upgrade: python-dateutil>=2.6.1 in /opt/conda/lib/python3.6/site-packages (from pandas==0.25.0) (2.6.1)\n",
+      "Requirement already satisfied, skipping upgrade: six>=1.5 in /opt/conda/lib/python3.6/site-packages (from python-dateutil>=2.6.1->pandas==0.25.0) (1.11.0)\n",
+      "\u001b[31mtensorflow 1.3.0 requires tensorflow-tensorboard<0.2.0,>=0.1.0, which is not installed.\u001b[0m\n",
+      "Installing collected packages: numpy, pandas\n",
+      "  Found existing installation: numpy 1.12.1\n",
+      "    Uninstalling numpy-1.12.1:\n",
+      "      Successfully uninstalled numpy-1.12.1\n",
+      "  Found existing installation: pandas 0.23.3\n",
+      "    Uninstalling pandas-0.23.3:\n",
+      "      Successfully uninstalled pandas-0.23.3\n",
+      "Successfully installed numpy-1.19.5 pandas-0.25.0\n"
+     ]
+    }
+   ],
+   "source": [
+    "!pip install --upgrade pandas==0.25.0;"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#importing  liabraries\n",
+    "\n",
+    "import pandas as pd \n",
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt\n",
+    "%matplotlib inline\n",
+    "import seaborn as sns\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "<a id='wrangling'></a>\n",
+    "## Data Wrangling\n",
+    "\n",
+    "\n",
+    "### General Properties\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# reading the csv file containing the dataset\n",
+    "\n",
+    "df_mvs=pd.read_csv('tmdb-movies.csv')\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>id</th>\n",
+       "      <th>imdb_id</th>\n",
+       "      <th>popularity</th>\n",
+       "      <th>budget</th>\n",
+       "      <th>revenue</th>\n",
+       "      <th>original_title</th>\n",
+       "      <th>cast</th>\n",
+       "      <th>homepage</th>\n",
+       "      <th>director</th>\n",
+       "      <th>tagline</th>\n",
+       "      <th>...</th>\n",
+       "      <th>overview</th>\n",
+       "      <th>runtime</th>\n",
+       "      <th>genres</th>\n",
+       "      <th>production_companies</th>\n",
+       "      <th>release_date</th>\n",
+       "      <th>vote_count</th>\n",
+       "      <th>vote_average</th>\n",
+       "      <th>release_year</th>\n",
+       "      <th>budget_adj</th>\n",
+       "      <th>revenue_adj</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>135397</td>\n",
+       "      <td>tt0369610</td>\n",
+       "      <td>32.985763</td>\n",
+       "      <td>150000000</td>\n",
+       "      <td>1513528810</td>\n",
+       "      <td>Jurassic World</td>\n",
+       "      <td>Chris Pratt|Bryce Dallas Howard|Irrfan Khan|Vi...</td>\n",
+       "      <td>http://www.jurassicworld.com/</td>\n",
+       "      <td>Colin Trevorrow</td>\n",
+       "      <td>The park is open.</td>\n",
+       "      <td>...</td>\n",
+       "      <td>Twenty-two years after the events of Jurassic ...</td>\n",
+       "      <td>124</td>\n",
+       "      <td>Action|Adventure|Science Fiction|Thriller</td>\n",
+       "      <td>Universal Studios|Amblin Entertainment|Legenda...</td>\n",
+       "      <td>6/9/15</td>\n",
+       "      <td>5562</td>\n",
+       "      <td>6.5</td>\n",
+       "      <td>2015</td>\n",
+       "      <td>1.379999e+08</td>\n",
+       "      <td>1.392446e+09</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>76341</td>\n",
+       "      <td>tt1392190</td>\n",
+       "      <td>28.419936</td>\n",
+       "      <td>150000000</td>\n",
+       "      <td>378436354</td>\n",
+       "      <td>Mad Max: Fury Road</td>\n",
+       "      <td>Tom Hardy|Charlize Theron|Hugh Keays-Byrne|Nic...</td>\n",
+       "      <td>http://www.madmaxmovie.com/</td>\n",
+       "      <td>George Miller</td>\n",
+       "      <td>What a Lovely Day.</td>\n",
+       "      <td>...</td>\n",
+       "      <td>An apocalyptic story set in the furthest reach...</td>\n",
+       "      <td>120</td>\n",
+       "      <td>Action|Adventure|Science Fiction|Thriller</td>\n",
+       "      <td>Village Roadshow Pictures|Kennedy Miller Produ...</td>\n",
+       "      <td>5/13/15</td>\n",
+       "      <td>6185</td>\n",
+       "      <td>7.1</td>\n",
+       "      <td>2015</td>\n",
+       "      <td>1.379999e+08</td>\n",
+       "      <td>3.481613e+08</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>262500</td>\n",
+       "      <td>tt2908446</td>\n",
+       "      <td>13.112507</td>\n",
+       "      <td>110000000</td>\n",
+       "      <td>295238201</td>\n",
+       "      <td>Insurgent</td>\n",
+       "      <td>Shailene Woodley|Theo James|Kate Winslet|Ansel...</td>\n",
+       "      <td>http://www.thedivergentseries.movie/#insurgent</td>\n",
+       "      <td>Robert Schwentke</td>\n",
+       "      <td>One Choice Can Destroy You</td>\n",
+       "      <td>...</td>\n",
+       "      <td>Beatrice Prior must confront her inner demons ...</td>\n",
+       "      <td>119</td>\n",
+       "      <td>Adventure|Science Fiction|Thriller</td>\n",
+       "      <td>Summit Entertainment|Mandeville Films|Red Wago...</td>\n",
+       "      <td>3/18/15</td>\n",
+       "      <td>2480</td>\n",
+       "      <td>6.3</td>\n",
+       "      <td>2015</td>\n",
+       "      <td>1.012000e+08</td>\n",
+       "      <td>2.716190e+08</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>140607</td>\n",
+       "      <td>tt2488496</td>\n",
+       "      <td>11.173104</td>\n",
+       "      <td>200000000</td>\n",
+       "      <td>2068178225</td>\n",
+       "      <td>Star Wars: The Force Awakens</td>\n",
+       "      <td>Harrison Ford|Mark Hamill|Carrie Fisher|Adam D...</td>\n",
+       "      <td>http://www.starwars.com/films/star-wars-episod...</td>\n",
+       "      <td>J.J. Abrams</td>\n",
+       "      <td>Every generation has a story.</td>\n",
+       "      <td>...</td>\n",
+       "      <td>Thirty years after defeating the Galactic Empi...</td>\n",
+       "      <td>136</td>\n",
+       "      <td>Action|Adventure|Science Fiction|Fantasy</td>\n",
+       "      <td>Lucasfilm|Truenorth Productions|Bad Robot</td>\n",
+       "      <td>12/15/15</td>\n",
+       "      <td>5292</td>\n",
+       "      <td>7.5</td>\n",
+       "      <td>2015</td>\n",
+       "      <td>1.839999e+08</td>\n",
+       "      <td>1.902723e+09</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>168259</td>\n",
+       "      <td>tt2820852</td>\n",
+       "      <td>9.335014</td>\n",
+       "      <td>190000000</td>\n",
+       "      <td>1506249360</td>\n",
+       "      <td>Furious 7</td>\n",
+       "      <td>Vin Diesel|Paul Walker|Jason Statham|Michelle ...</td>\n",
+       "      <td>http://www.furious7.com/</td>\n",
+       "      <td>James Wan</td>\n",
+       "      <td>Vengeance Hits Home</td>\n",
+       "      <td>...</td>\n",
+       "      <td>Deckard Shaw seeks revenge against Dominic Tor...</td>\n",
+       "      <td>137</td>\n",
+       "      <td>Action|Crime|Thriller</td>\n",
+       "      <td>Universal Pictures|Original Film|Media Rights ...</td>\n",
+       "      <td>4/1/15</td>\n",
+       "      <td>2947</td>\n",
+       "      <td>7.3</td>\n",
+       "      <td>2015</td>\n",
+       "      <td>1.747999e+08</td>\n",
+       "      <td>1.385749e+09</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>5 rows × 21 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "       id    imdb_id  popularity     budget     revenue  \\\n",
+       "0  135397  tt0369610   32.985763  150000000  1513528810   \n",
+       "1   76341  tt1392190   28.419936  150000000   378436354   \n",
+       "2  262500  tt2908446   13.112507  110000000   295238201   \n",
+       "3  140607  tt2488496   11.173104  200000000  2068178225   \n",
+       "4  168259  tt2820852    9.335014  190000000  1506249360   \n",
+       "\n",
+       "                 original_title  \\\n",
+       "0                Jurassic World   \n",
+       "1            Mad Max: Fury Road   \n",
+       "2                     Insurgent   \n",
+       "3  Star Wars: The Force Awakens   \n",
+       "4                     Furious 7   \n",
+       "\n",
+       "                                                cast  \\\n",
+       "0  Chris Pratt|Bryce Dallas Howard|Irrfan Khan|Vi...   \n",
+       "1  Tom Hardy|Charlize Theron|Hugh Keays-Byrne|Nic...   \n",
+       "2  Shailene Woodley|Theo James|Kate Winslet|Ansel...   \n",
+       "3  Harrison Ford|Mark Hamill|Carrie Fisher|Adam D...   \n",
+       "4  Vin Diesel|Paul Walker|Jason Statham|Michelle ...   \n",
+       "\n",
+       "                                            homepage          director  \\\n",
+       "0                      http://www.jurassicworld.com/   Colin Trevorrow   \n",
+       "1                        http://www.madmaxmovie.com/     George Miller   \n",
+       "2     http://www.thedivergentseries.movie/#insurgent  Robert Schwentke   \n",
+       "3  http://www.starwars.com/films/star-wars-episod...       J.J. Abrams   \n",
+       "4                           http://www.furious7.com/         James Wan   \n",
+       "\n",
+       "                         tagline  ...  \\\n",
+       "0              The park is open.  ...   \n",
+       "1             What a Lovely Day.  ...   \n",
+       "2     One Choice Can Destroy You  ...   \n",
+       "3  Every generation has a story.  ...   \n",
+       "4            Vengeance Hits Home  ...   \n",
+       "\n",
+       "                                            overview runtime  \\\n",
+       "0  Twenty-two years after the events of Jurassic ...     124   \n",
+       "1  An apocalyptic story set in the furthest reach...     120   \n",
+       "2  Beatrice Prior must confront her inner demons ...     119   \n",
+       "3  Thirty years after defeating the Galactic Empi...     136   \n",
+       "4  Deckard Shaw seeks revenge against Dominic Tor...     137   \n",
+       "\n",
+       "                                      genres  \\\n",
+       "0  Action|Adventure|Science Fiction|Thriller   \n",
+       "1  Action|Adventure|Science Fiction|Thriller   \n",
+       "2         Adventure|Science Fiction|Thriller   \n",
+       "3   Action|Adventure|Science Fiction|Fantasy   \n",
+       "4                      Action|Crime|Thriller   \n",
+       "\n",
+       "                                production_companies release_date vote_count  \\\n",
+       "0  Universal Studios|Amblin Entertainment|Legenda...       6/9/15       5562   \n",
+       "1  Village Roadshow Pictures|Kennedy Miller Produ...      5/13/15       6185   \n",
+       "2  Summit Entertainment|Mandeville Films|Red Wago...      3/18/15       2480   \n",
+       "3          Lucasfilm|Truenorth Productions|Bad Robot     12/15/15       5292   \n",
+       "4  Universal Pictures|Original Film|Media Rights ...       4/1/15       2947   \n",
+       "\n",
+       "   vote_average  release_year    budget_adj   revenue_adj  \n",
+       "0           6.5          2015  1.379999e+08  1.392446e+09  \n",
+       "1           7.1          2015  1.379999e+08  3.481613e+08  \n",
+       "2           6.3          2015  1.012000e+08  2.716190e+08  \n",
+       "3           7.5          2015  1.839999e+08  1.902723e+09  \n",
+       "4           7.3          2015  1.747999e+08  1.385749e+09  \n",
+       "\n",
+       "[5 rows x 21 columns]"
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#checking first 5 rows and also confirming the correct layout of columns and rows\n",
+    "df_mvs.head() "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "By looking on the columns of this dataset I can immediately see that  \n",
+    "there are columns that are not neccessary for the questions that will be investigated  \n",
+    "so we will need to drop them but first let us explore all the properties of the dataset"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'pandas.core.frame.DataFrame'>\n",
+      "RangeIndex: 10866 entries, 0 to 10865\n",
+      "Data columns (total 21 columns):\n",
+      "id                      10866 non-null int64\n",
+      "imdb_id                 10856 non-null object\n",
+      "popularity              10866 non-null float64\n",
+      "budget                  10866 non-null int64\n",
+      "revenue                 10866 non-null int64\n",
+      "original_title          10866 non-null object\n",
+      "cast                    10790 non-null object\n",
+      "homepage                2936 non-null object\n",
+      "director                10822 non-null object\n",
+      "tagline                 8042 non-null object\n",
+      "keywords                9373 non-null object\n",
+      "overview                10862 non-null object\n",
+      "runtime                 10866 non-null int64\n",
+      "genres                  10843 non-null object\n",
+      "production_companies    9836 non-null object\n",
+      "release_date            10866 non-null object\n",
+      "vote_count              10866 non-null int64\n",
+      "vote_average            10866 non-null float64\n",
+      "release_year            10866 non-null int64\n",
+      "budget_adj              10866 non-null float64\n",
+      "revenue_adj             10866 non-null float64\n",
+      "dtypes: float64(4), int64(6), object(11)\n",
+      "memory usage: 1.7+ MB\n"
+     ]
+    }
+   ],
+   "source": [
+    "#checking the column data types\n",
+    "\n",
+    "df_mvs.info()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Index(['imdb_id', 'cast', 'homepage', 'director', 'tagline', 'keywords',\n",
+       "       'overview', 'genres', 'production_companies'],\n",
+       "      dtype='object')"
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#checking columns that have atleast one NAn value\n",
+    "df_mvs.columns[df_mvs.isnull().any()] "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>id</th>\n",
+       "      <th>imdb_id</th>\n",
+       "      <th>popularity</th>\n",
+       "      <th>budget</th>\n",
+       "      <th>revenue</th>\n",
+       "      <th>original_title</th>\n",
+       "      <th>cast</th>\n",
+       "      <th>homepage</th>\n",
+       "      <th>director</th>\n",
+       "      <th>tagline</th>\n",
+       "      <th>...</th>\n",
+       "      <th>overview</th>\n",
+       "      <th>runtime</th>\n",
+       "      <th>genres</th>\n",
+       "      <th>production_companies</th>\n",
+       "      <th>release_date</th>\n",
+       "      <th>vote_count</th>\n",
+       "      <th>vote_average</th>\n",
+       "      <th>release_year</th>\n",
+       "      <th>budget_adj</th>\n",
+       "      <th>revenue_adj</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>2090</th>\n",
+       "      <td>42194</td>\n",
+       "      <td>tt0411951</td>\n",
+       "      <td>0.59643</td>\n",
+       "      <td>30000000</td>\n",
+       "      <td>967000</td>\n",
+       "      <td>TEKKEN</td>\n",
+       "      <td>Jon Foo|Kelly Overton|Cary-Hiroyuki Tagawa|Ian...</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>Dwight H. Little</td>\n",
+       "      <td>Survival is no game</td>\n",
+       "      <td>...</td>\n",
+       "      <td>In the year of 2039, after World Wars destroy ...</td>\n",
+       "      <td>92</td>\n",
+       "      <td>Crime|Drama|Action|Thriller|Science Fiction</td>\n",
+       "      <td>Namco|Light Song Films</td>\n",
+       "      <td>3/20/10</td>\n",
+       "      <td>110</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>2010</td>\n",
+       "      <td>30000000.0</td>\n",
+       "      <td>967000.0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>1 rows × 21 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "         id    imdb_id  popularity    budget  revenue original_title  \\\n",
+       "2090  42194  tt0411951     0.59643  30000000   967000         TEKKEN   \n",
+       "\n",
+       "                                                   cast homepage  \\\n",
+       "2090  Jon Foo|Kelly Overton|Cary-Hiroyuki Tagawa|Ian...      NaN   \n",
+       "\n",
+       "              director              tagline  ...  \\\n",
+       "2090  Dwight H. Little  Survival is no game  ...   \n",
+       "\n",
+       "                                               overview runtime  \\\n",
+       "2090  In the year of 2039, after World Wars destroy ...      92   \n",
+       "\n",
+       "                                           genres    production_companies  \\\n",
+       "2090  Crime|Drama|Action|Thriller|Science Fiction  Namco|Light Song Films   \n",
+       "\n",
+       "     release_date vote_count  vote_average  release_year  budget_adj  \\\n",
+       "2090      3/20/10        110           5.0          2010  30000000.0   \n",
+       "\n",
+       "      revenue_adj  \n",
+       "2090     967000.0  \n",
+       "\n",
+       "[1 rows x 21 columns]"
+      ]
+     },
+     "execution_count": 7,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# checking duplicated columns\n",
+    "df_mvs[df_mvs.duplicated()]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>id</th>\n",
+       "      <th>popularity</th>\n",
+       "      <th>budget</th>\n",
+       "      <th>revenue</th>\n",
+       "      <th>runtime</th>\n",
+       "      <th>vote_count</th>\n",
+       "      <th>vote_average</th>\n",
+       "      <th>release_year</th>\n",
+       "      <th>budget_adj</th>\n",
+       "      <th>revenue_adj</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>count</th>\n",
+       "      <td>10866.000000</td>\n",
+       "      <td>10866.000000</td>\n",
+       "      <td>1.086600e+04</td>\n",
+       "      <td>1.086600e+04</td>\n",
+       "      <td>10866.000000</td>\n",
+       "      <td>10866.000000</td>\n",
+       "      <td>10866.000000</td>\n",
+       "      <td>10866.000000</td>\n",
+       "      <td>1.086600e+04</td>\n",
+       "      <td>1.086600e+04</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>mean</th>\n",
+       "      <td>66064.177434</td>\n",
+       "      <td>0.646441</td>\n",
+       "      <td>1.462570e+07</td>\n",
+       "      <td>3.982332e+07</td>\n",
+       "      <td>102.070863</td>\n",
+       "      <td>217.389748</td>\n",
+       "      <td>5.974922</td>\n",
+       "      <td>2001.322658</td>\n",
+       "      <td>1.755104e+07</td>\n",
+       "      <td>5.136436e+07</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>std</th>\n",
+       "      <td>92130.136561</td>\n",
+       "      <td>1.000185</td>\n",
+       "      <td>3.091321e+07</td>\n",
+       "      <td>1.170035e+08</td>\n",
+       "      <td>31.381405</td>\n",
+       "      <td>575.619058</td>\n",
+       "      <td>0.935142</td>\n",
+       "      <td>12.812941</td>\n",
+       "      <td>3.430616e+07</td>\n",
+       "      <td>1.446325e+08</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>min</th>\n",
+       "      <td>5.000000</td>\n",
+       "      <td>0.000065</td>\n",
+       "      <td>0.000000e+00</td>\n",
+       "      <td>0.000000e+00</td>\n",
+       "      <td>0.000000</td>\n",
+       "      <td>10.000000</td>\n",
+       "      <td>1.500000</td>\n",
+       "      <td>1960.000000</td>\n",
+       "      <td>0.000000e+00</td>\n",
+       "      <td>0.000000e+00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>25%</th>\n",
+       "      <td>10596.250000</td>\n",
+       "      <td>0.207583</td>\n",
+       "      <td>0.000000e+00</td>\n",
+       "      <td>0.000000e+00</td>\n",
+       "      <td>90.000000</td>\n",
+       "      <td>17.000000</td>\n",
+       "      <td>5.400000</td>\n",
+       "      <td>1995.000000</td>\n",
+       "      <td>0.000000e+00</td>\n",
+       "      <td>0.000000e+00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50%</th>\n",
+       "      <td>20669.000000</td>\n",
+       "      <td>0.383856</td>\n",
+       "      <td>0.000000e+00</td>\n",
+       "      <td>0.000000e+00</td>\n",
+       "      <td>99.000000</td>\n",
+       "      <td>38.000000</td>\n",
+       "      <td>6.000000</td>\n",
+       "      <td>2006.000000</td>\n",
+       "      <td>0.000000e+00</td>\n",
+       "      <td>0.000000e+00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>75%</th>\n",
+       "      <td>75610.000000</td>\n",
+       "      <td>0.713817</td>\n",
+       "      <td>1.500000e+07</td>\n",
+       "      <td>2.400000e+07</td>\n",
+       "      <td>111.000000</td>\n",
+       "      <td>145.750000</td>\n",
+       "      <td>6.600000</td>\n",
+       "      <td>2011.000000</td>\n",
+       "      <td>2.085325e+07</td>\n",
+       "      <td>3.369710e+07</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>max</th>\n",
+       "      <td>417859.000000</td>\n",
+       "      <td>32.985763</td>\n",
+       "      <td>4.250000e+08</td>\n",
+       "      <td>2.781506e+09</td>\n",
+       "      <td>900.000000</td>\n",
+       "      <td>9767.000000</td>\n",
+       "      <td>9.200000</td>\n",
+       "      <td>2015.000000</td>\n",
+       "      <td>4.250000e+08</td>\n",
+       "      <td>2.827124e+09</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                  id    popularity        budget       revenue       runtime  \\\n",
+       "count   10866.000000  10866.000000  1.086600e+04  1.086600e+04  10866.000000   \n",
+       "mean    66064.177434      0.646441  1.462570e+07  3.982332e+07    102.070863   \n",
+       "std     92130.136561      1.000185  3.091321e+07  1.170035e+08     31.381405   \n",
+       "min         5.000000      0.000065  0.000000e+00  0.000000e+00      0.000000   \n",
+       "25%     10596.250000      0.207583  0.000000e+00  0.000000e+00     90.000000   \n",
+       "50%     20669.000000      0.383856  0.000000e+00  0.000000e+00     99.000000   \n",
+       "75%     75610.000000      0.713817  1.500000e+07  2.400000e+07    111.000000   \n",
+       "max    417859.000000     32.985763  4.250000e+08  2.781506e+09    900.000000   \n",
+       "\n",
+       "         vote_count  vote_average  release_year    budget_adj   revenue_adj  \n",
+       "count  10866.000000  10866.000000  10866.000000  1.086600e+04  1.086600e+04  \n",
+       "mean     217.389748      5.974922   2001.322658  1.755104e+07  5.136436e+07  \n",
+       "std      575.619058      0.935142     12.812941  3.430616e+07  1.446325e+08  \n",
+       "min       10.000000      1.500000   1960.000000  0.000000e+00  0.000000e+00  \n",
+       "25%       17.000000      5.400000   1995.000000  0.000000e+00  0.000000e+00  \n",
+       "50%       38.000000      6.000000   2006.000000  0.000000e+00  0.000000e+00  \n",
+       "75%      145.750000      6.600000   2011.000000  2.085325e+07  3.369710e+07  \n",
+       "max     9767.000000      9.200000   2015.000000  4.250000e+08  2.827124e+09  "
+      ]
+     },
+     "execution_count": 8,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# descriptive statistics\n",
+    "df_mvs.describe()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "id                      10865\n",
+       "imdb_id                 10855\n",
+       "popularity              10814\n",
+       "budget                    557\n",
+       "revenue                  4702\n",
+       "original_title          10571\n",
+       "cast                    10719\n",
+       "homepage                 2896\n",
+       "director                 5067\n",
+       "tagline                  7997\n",
+       "keywords                 8804\n",
+       "overview                10847\n",
+       "runtime                   247\n",
+       "genres                   2039\n",
+       "production_companies     7445\n",
+       "release_date             5909\n",
+       "vote_count               1289\n",
+       "vote_average               72\n",
+       "release_year               56\n",
+       "budget_adj               2614\n",
+       "revenue_adj              4840\n",
+       "dtype: int64"
+      ]
+     },
+     "execution_count": 9,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#checking the unique values in each column\n",
+    "df_mvs.nunique()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "\n",
+    "\n",
+    "\n",
+    "### Data Cleaning\n",
+    "> **Note**: looking at the general properties above we have seen some inconsistances on our data, I will be fixing them using the steps below.\n",
+    "\n",
+    "  * Removing fetures that are not relevent to the questions   \n",
+    "  * Fixing columns with missing values  \n",
+    "  * Remove dupplicated rows\n",
+    "  * We can clearly see on the descreptive statistics summary that we have fetures with zero as their minimum data points.  \n",
+    "    so we will try and fix them with either dropping them or an alternative solution while carefully considering the effect  \n",
+    "    of the changes on the overall results\n",
+    "  * changing the release date to the right format  \n",
+    "  * We going to fix the columns with multi-variable by splitting and exploding them for a reliable analysis.\n",
+    " "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#droping columns that are not relevent to the questions at hand\n",
+    "df_mvs.drop(['homepage','keywords','tagline','imdb_id','overview','budget_adj','revenue_adj','runtime'], axis=1,inplace=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(10866, 13)"
+      ]
+     },
+     "execution_count": 11,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#checking the shape to confirm that columns are dropped\n",
+    "df_mvs.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Index(['id', 'popularity', 'budget', 'revenue', 'original_title', 'cast',\n",
+       "       'director', 'genres', 'production_companies', 'release_date',\n",
+       "       'vote_count', 'vote_average', 'release_year'],\n",
+       "      dtype='object')"
+      ]
+     },
+     "execution_count": 12,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# checking the info again to see if the the correct columns were dropped\n",
+    "df_mvs.columns"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(9773, 13)"
+      ]
+     },
+     "execution_count": 13,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#dropping data points with null values\n",
+    "df_mvs.dropna(axis=0, inplace=True)\n",
+    "\n",
+    "df_mvs.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "id                      0\n",
+       "popularity              0\n",
+       "budget                  0\n",
+       "revenue                 0\n",
+       "original_title          0\n",
+       "cast                    0\n",
+       "director                0\n",
+       "genres                  0\n",
+       "production_companies    0\n",
+       "release_date            0\n",
+       "vote_count              0\n",
+       "vote_average            0\n",
+       "release_year            0\n",
+       "dtype: int64"
+      ]
+     },
+     "execution_count": 14,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#Checking for null values in the dataset to confirm the changes\n",
+    "\n",
+    "df_mvs.isna().sum()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0"
+      ]
+     },
+     "execution_count": 15,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# droping duplicated rows\n",
+    "\n",
+    "df_mvs.drop_duplicates(inplace=True)\n",
+    "\n",
+    "#confirming the number of duplicates present\n",
+    "df_mvs.duplicated().sum()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>id</th>\n",
+       "      <th>popularity</th>\n",
+       "      <th>budget</th>\n",
+       "      <th>revenue</th>\n",
+       "      <th>vote_count</th>\n",
+       "      <th>vote_average</th>\n",
+       "      <th>release_year</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>count</th>\n",
+       "      <td>9772.000000</td>\n",
+       "      <td>9772.000000</td>\n",
+       "      <td>9.772000e+03</td>\n",
+       "      <td>9.772000e+03</td>\n",
+       "      <td>9772.000000</td>\n",
+       "      <td>9772.000000</td>\n",
+       "      <td>9772.000000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>mean</th>\n",
+       "      <td>63189.640810</td>\n",
+       "      <td>0.694721</td>\n",
+       "      <td>1.617967e+07</td>\n",
+       "      <td>4.423121e+07</td>\n",
+       "      <td>239.312014</td>\n",
+       "      <td>5.963528</td>\n",
+       "      <td>2000.878428</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>std</th>\n",
+       "      <td>90718.059987</td>\n",
+       "      <td>1.036931</td>\n",
+       "      <td>3.221074e+07</td>\n",
+       "      <td>1.225889e+08</td>\n",
+       "      <td>603.011504</td>\n",
+       "      <td>0.913174</td>\n",
+       "      <td>13.036794</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>min</th>\n",
+       "      <td>5.000000</td>\n",
+       "      <td>0.000188</td>\n",
+       "      <td>0.000000e+00</td>\n",
+       "      <td>0.000000e+00</td>\n",
+       "      <td>10.000000</td>\n",
+       "      <td>1.500000</td>\n",
+       "      <td>1960.000000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>25%</th>\n",
+       "      <td>10221.500000</td>\n",
+       "      <td>0.232710</td>\n",
+       "      <td>0.000000e+00</td>\n",
+       "      <td>0.000000e+00</td>\n",
+       "      <td>18.000000</td>\n",
+       "      <td>5.400000</td>\n",
+       "      <td>1994.000000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50%</th>\n",
+       "      <td>18677.500000</td>\n",
+       "      <td>0.419762</td>\n",
+       "      <td>2.000000e+05</td>\n",
+       "      <td>0.000000e+00</td>\n",
+       "      <td>46.000000</td>\n",
+       "      <td>6.000000</td>\n",
+       "      <td>2005.000000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>75%</th>\n",
+       "      <td>70577.250000</td>\n",
+       "      <td>0.776408</td>\n",
+       "      <td>1.928750e+07</td>\n",
+       "      <td>3.104729e+07</td>\n",
+       "      <td>173.000000</td>\n",
+       "      <td>6.600000</td>\n",
+       "      <td>2011.000000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>max</th>\n",
+       "      <td>417859.000000</td>\n",
+       "      <td>32.985763</td>\n",
+       "      <td>4.250000e+08</td>\n",
+       "      <td>2.781506e+09</td>\n",
+       "      <td>9767.000000</td>\n",
+       "      <td>8.700000</td>\n",
+       "      <td>2015.000000</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                  id   popularity        budget       revenue   vote_count  \\\n",
+       "count    9772.000000  9772.000000  9.772000e+03  9.772000e+03  9772.000000   \n",
+       "mean    63189.640810     0.694721  1.617967e+07  4.423121e+07   239.312014   \n",
+       "std     90718.059987     1.036931  3.221074e+07  1.225889e+08   603.011504   \n",
+       "min         5.000000     0.000188  0.000000e+00  0.000000e+00    10.000000   \n",
+       "25%     10221.500000     0.232710  0.000000e+00  0.000000e+00    18.000000   \n",
+       "50%     18677.500000     0.419762  2.000000e+05  0.000000e+00    46.000000   \n",
+       "75%     70577.250000     0.776408  1.928750e+07  3.104729e+07   173.000000   \n",
+       "max    417859.000000    32.985763  4.250000e+08  2.781506e+09  9767.000000   \n",
+       "\n",
+       "       vote_average  release_year  \n",
+       "count   9772.000000   9772.000000  \n",
+       "mean       5.963528   2000.878428  \n",
+       "std        0.913174     13.036794  \n",
+       "min        1.500000   1960.000000  \n",
+       "25%        5.400000   1994.000000  \n",
+       "50%        6.000000   2005.000000  \n",
+       "75%        6.600000   2011.000000  \n",
+       "max        8.700000   2015.000000  "
+      ]
+     },
+     "execution_count": 16,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# descriptive statistics summary\n",
+    "df_mvs.describe()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "  **Note**: we can clearly see from the above summary that we have zero data points on ``budget`` & ``revenue`` features  \n",
+    "  I am going to fix them by either removing the rows or replacing them by the mean. and I will do that while considering the effect of those changes to the whole results and also using logic and sense."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "budget     4751\n",
+       "revenue    5022\n",
+       "dtype: int64"
+      ]
+     },
+     "execution_count": 17,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Let us count the number of zeros on these fetures\n",
+    "df_mvs[['budget', 'revenue']].apply(lambda x: x == 0).sum()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "It looks like we have lot of entries with zeros, it will not be a good practise to drop all of them  \n",
+    "as that will compromise the quality of our analysis"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# let us creat a funcion to replace zeros with mean by release year\n",
+    "\n",
+    "def repl_zeros(row: pd.DataFrame, columns: list, data_frame: pd.DataFrame):\n",
+    "    \n",
+    "    if (row[columns] == 0).all():\n",
+    "        row[columns] = data_frame.loc[row.release_year, columns]\n",
+    "        \n",
+    "    return row"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "  Calculating the mean values for each year\n",
+    "  "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>budget</th>\n",
+       "      <th>revenue</th>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>release_year</th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>1960</th>\n",
+       "      <td>6.892796e+05</td>\n",
+       "      <td>4.531406e+06</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1961</th>\n",
+       "      <td>1.537900e+06</td>\n",
+       "      <td>1.125734e+07</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1962</th>\n",
+       "      <td>1.824071e+06</td>\n",
+       "      <td>7.185995e+06</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1963</th>\n",
+       "      <td>2.156809e+06</td>\n",
+       "      <td>5.511911e+06</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1964</th>\n",
+       "      <td>9.630039e+05</td>\n",
+       "      <td>8.316629e+06</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                    budget       revenue\n",
+       "release_year                            \n",
+       "1960          6.892796e+05  4.531406e+06\n",
+       "1961          1.537900e+06  1.125734e+07\n",
+       "1962          1.824071e+06  7.185995e+06\n",
+       "1963          2.156809e+06  5.511911e+06\n",
+       "1964          9.630039e+05  8.316629e+06"
+      ]
+     },
+     "execution_count": 19,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "meanby_year = df_mvs.groupby('release_year')[['budget', 'revenue']].mean()\n",
+    "meanby_year.head(5)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Now using logic and sense, we have few different cases:  \n",
+    "  * It is possible that both revenue and budget column have zeros, and that makes sense to be concluded as a  missing  \n",
+    "      information. \n",
+    "  * other than the case where budget is zero and revenue is not zero. so for this reason I only fill the revenue columns having 0 value for the budget column as well.  \n",
+    "  * we cannot fill all the revenue zeros with the mean because it is possible that the movie did not generate any revenue with a given budget. so I am going to drop those revenue rows  \n",
+    " "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# creating the dataframe  for only rows of budget and revenue that have zeros\n",
+    "zeros_budget_revenue = df_mvs[(df_mvs['budget'] == 0) & (df_mvs['revenue'] == 0)]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# replacing zeros with the mean\n",
+    "zeros_budget_revenue = zeros_budget_revenue.apply(\n",
+    "    lambda x: repl_zeros(x, ['budget', 'revenue'], meanby_year),\n",
+    "    axis=1)\n",
+    "\n",
+    "df_mvs[df_mvs.index.isin(zeros_budget_revenue.index)] = zeros_budget_revenue"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(0, 13)"
+      ]
+     },
+     "execution_count": 22,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# confirming the changes\n",
+    "df_mvs[(df_mvs.budget == 0) & (df_mvs.revenue == 0)].shape\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#now fixing the rows for bdget only that have zeros\n",
+    "zeros_budget = df_mvs[df_mvs.budget == 0]\n",
+    "zeros_budget = zeros_budget.apply(lambda x: repl_zeros(x, ['budget'], meanby_year), axis=1)\n",
+    "df_mvs[df_mvs.index.isin(zeros_budget.index)] = zeros_budget"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(0, 13)"
+      ]
+     },
+     "execution_count": 24,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#confirming the changes\n",
+    "df_mvs[df_mvs.budget == 0].shape"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "  Dropping rows with zeros on the ``revenue`` column"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "\n",
+    "df_mvs.drop(df_mvs[df_mvs.revenue == 0].index, inplace=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# changing date to the right format\n",
+    "\n",
+    "df_mvs['release_date'] = pd.to_datetime(df_mvs['release_date'])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0   2015-06-09\n",
+       "1   2015-05-13\n",
+       "Name: release_date, dtype: datetime64[ns]"
+      ]
+     },
+     "execution_count": 27,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# confirming the format\n",
+    "df_mvs['release_date'].head(2)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Lastly we going to fix the ``genre``,``director`` and ``production_companies`` columns  \n",
+    "by splitting and exploding the multi-variable values to create new rows for a accurate analysis."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 28,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# creating a function to expand the columns with multi-variables\n",
+    "\n",
+    "def expand_multivalue_columns(df: pd.DataFrame, col: str, delimeter: str=\"|\"):\n",
+    "    \n",
+    "    # Copying the Data Frame\n",
+    "    df_copy = df_mvs.copy()\n",
+    "    \n",
+    "    # Splitting the string values\n",
+    "    df_copy[col] = df_copy[col].str.split(delimeter)\n",
+    "    \n",
+    "    # Explode the whole dataset based on the splitted column\n",
+    "    return df_copy.explode(col)\n",
+    "   "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 29,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# fix the genres column \n",
+    "df_genres=expand_multivalue_columns(df_mvs,'genres')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 30,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# fixing the director column\n",
+    "df_director=expand_multivalue_columns(df_mvs,'director')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# fixing the production_companies column\n",
+    "df_production_companies=expand_multivalue_columns(df_mvs,'production_companies')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "<a id='eda'></a>\n",
+    "## Exploratory Data Analysis\n",
+    "\n",
+    "\n",
+    "### Q1. who are the top ten directors that directed a movie with highest revenue?\n",
+    "#### - which movies they directed?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 32,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Text(0.5,1,'Revenue Histogram')"
+      ]
+     },
+     "execution_count": 32,
+     "metadata": {},
+     "output_type": "execute_result"
+    },
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<matplotlib.figure.Figure at 0x7f3a410dac50>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# first let us plot the histograms for the whole dataset to see the general distribution \n",
+    "\n",
+    "df_mvs['revenue'].hist(figsize=(4,5));\n",
+    "plt.xlabel('revenue')\n",
+    "plt.ylabel('Count')\n",
+    "plt.title('Revenue Histogram')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Looking at the distributions, we can point out that almost 90% of the movies made small revenues.  \n",
+    "Now let us creat a new dataframe with top ten movies with high revenues, we will do this by first filtering the values where revenue is greater than it mean and answer the question."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 33,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "69512241.59531555"
+      ]
+     },
+     "execution_count": 33,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#calculating the mean for the revenue column.\n",
+    "#note we are using the original mean before exploding the columns, to avoid contribution of the repeated data points.``\n",
+    "\n",
+    "rev_mean=df_mvs['revenue'].mean()\n",
+    "rev_mean"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 34,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(1729, 13)"
+      ]
+     },
+     "execution_count": 34,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# creating the dataframe with values greater than the mean and fixed director column\n",
+    "\n",
+    "new_df=df_director.query(f'revenue > {rev_mean}')\n",
+    "new_df.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 35,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(10, 13)"
+      ]
+     },
+     "execution_count": 35,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#creating a dataframe with top 10 revenues\n",
+    "top_rev_director=new_df.nlargest(10,columns=['revenue'])\n",
+    "top_rev_director.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 36,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "1386      James Cameron\n",
+       "3           J.J. Abrams\n",
+       "5231      James Cameron\n",
+       "4361        Joss Whedon\n",
+       "0       Colin Trevorrow\n",
+       "4             James Wan\n",
+       "14          Joss Whedon\n",
+       "3374        David Yates\n",
+       "5422         Chris Buck\n",
+       "5422       Jennifer Lee\n",
+       "Name: director, dtype: object"
+      ]
+     },
+     "execution_count": 36,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#Now let us view the top 10 directors.\n",
+    "top_rev_director['director']"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### The ten directors that directed the top ten movies in terms of revenues are:  \n",
+    "\n",
+    "  * James Cameron\n",
+    "  * J.J. Abrams\n",
+    "  * James Cameron\n",
+    "  * Joss Whedon\n",
+    "  * Colin Trevorrow\n",
+    "  * James Wan\n",
+    "  * Joss Whedon\t\n",
+    "  * David Yates\n",
+    "  * Chris Buck\n",
+    "  * Jennifer Lee``\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 37,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array(['Avatar', 'Star Wars: The Force Awakens', 'Titanic',\n",
+       "       'The Avengers', 'Jurassic World', 'Furious 7',\n",
+       "       'Avengers: Age of Ultron',\n",
+       "       'Harry Potter and the Deathly Hallows: Part 2', 'Frozen'],\n",
+       "      dtype=object)"
+      ]
+     },
+     "execution_count": 37,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "top_rev_director['original_title'].unique()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "``The unique movies they directed are:``\n",
+    "  * Avatar\n",
+    "  * Star Wars: The Force Awakens\n",
+    "  * Titanic\n",
+    "  * The Avengers\n",
+    "  * jurassic World\n",
+    "  * Furious 7\n",
+    "  * Avengers: Age of Ultron\n",
+    "  * Harry Potter and the Deathly Hallows: Part 2  \n",
+    "  * Frozen                                                         "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Q2. what are the unique genres of the movies with top ten high revenues?\n",
+    "### -Are they popular?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "First let us creat the variable for the the data of the most popular.  \n",
+    "I will take the values more than 75% percentile as ``most pouplar``.\n",
+    "\n",
+    "But let us start by gathering the top 10 genres by revenue and explore the statistical properties."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 38,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(4487, 13)"
+      ]
+     },
+     "execution_count": 38,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# filtering revenues above mean from the dataframe with exploded columns\n",
+    "new_df1=df_genres.query(f'revenue > {rev_mean}')\n",
+    "new_df1.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 39,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(10, 13)"
+      ]
+     },
+     "execution_count": 39,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# creating the dataframe with values greater than the mean and exploaded genre column\n",
+    "top_rev_genres=new_df1.nlargest(10,columns=['revenue'])\n",
+    "top_rev_genres.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 40,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array(['Action', 'Adventure', 'Fantasy', 'Science Fiction', 'Drama',\n",
+       "       'Romance'], dtype=object)"
+      ]
+     },
+     "execution_count": 40,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# genres\n",
+    "top_rev_genres.genres.unique()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The genres on the top earning movies are:\n",
+    "  * Action\n",
+    "  * Adventure\n",
+    "  * Fantasy\n",
+    "  * Science Fiction\n",
+    "  * Drama\n",
+    "  * Romantic"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    " ### ``Are they popular?``"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 41,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Text(0.5,1,'Popularity Histogram')"
+      ]
+     },
+     "execution_count": 41,
+     "metadata": {},
+     "output_type": "execute_result"
+    },
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<matplotlib.figure.Figure at 0x7f3a40d25588>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "#plotting the popularity histogram\n",
+    "df_mvs['popularity'].hist(figsize=(4,5));\n",
+    "plt.xlabel('popularity')\n",
+    "plt.ylabel('count')\n",
+    "plt.title('Popularity Histogram')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We can clearly see that most movies are not popular from the histogram above,  \n",
+    "now let us observe the correlation between revenue and popularity"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 42,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Text(0.5,1,'Popularity vs revenue')"
+      ]
+     },
+     "execution_count": 42,
+     "metadata": {},
+     "output_type": "execute_result"
+    },
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<matplotlib.figure.Figure at 0x7f3a40d2bda0>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "#plotting the scatterplot between revenue and popularity.\n",
+    "\n",
+    "plt.scatter(x='revenue',y='popularity',data=df_mvs)\n",
+    "plt.xlabel('revenue')\n",
+    "plt.ylabel('popularity')\n",
+    "plt.title('Popularity vs revenue')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "There is a positve correlation between the two fetures, with some outliers.  \n",
+    "We can also see that lot of data points are more distributed towards the lowest values."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Now filtering the genres that are considered to be most popular."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 43,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0.8335764999999993"
+      ]
+     },
+     "execution_count": 43,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#finding popularity 75th percentile\n",
+    "popularity_perc=df_mvs.popularity.quantile(.75)\n",
+    "popularity_perc"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 44,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array(['Action', 'Adventure', 'Science Fiction', 'Thriller', 'Drama'],\n",
+       "      dtype=object)"
+      ]
+     },
+     "execution_count": 44,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "popular=df_genres[df_genres['popularity']>= popularity_perc]\n",
+    "popular.nlargest(10,columns='popularity')['genres'].unique()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We can clearly see that, some unique genres of high earnings are not so popular.\n",
+    "Thriller-is among the popular genres but not from high earning movies.\n",
+    "Fantasy- is among genres for high earning movies but not part of the popular genres\n",
+    "* Action\n",
+    "* Adventure \n",
+    "* Science Fiction\n",
+    "* Thriller\n",
+    "* Drama"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Q3. Does the top 10 movies with high budget also form part of the top 10 movies with high revenue?\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 45,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Text(0.5,1,'Budget vs Revenue')"
+      ]
+     },
+     "execution_count": 45,
+     "metadata": {},
+     "output_type": "execute_result"
+    },
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<matplotlib.figure.Figure at 0x7f3a40607358>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "#checking the correlation between budget & revenue\n",
+    "df_mvs.plot(x='budget',y='revenue', kind='scatter')\n",
+    "plt.title('Budget vs Revenue')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "There is a positve correlation between budget and revenue, now let us filter movies by revenue above mean.  \n",
+    "And also the budget that is above its mean."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 46,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "25083573.65179204"
+      ]
+     },
+     "execution_count": 46,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#first let us calculate the mean for budget\n",
+    "budget_mean=df_mvs.budget.mean()\n",
+    "\n",
+    "# budget mean\n",
+    "budget_mean"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 47,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "69512241.59531555"
+      ]
+     },
+     "execution_count": 47,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#revenue mean\n",
+    "rev_mean"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 48,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(1155, 13)"
+      ]
+     },
+     "execution_count": 48,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# filtering\n",
+    "df_rev_budget=df_mvs[(df_mvs['budget']>= budget_mean) & (df_mvs['revenue']>=rev_mean)]\n",
+    "# checking the shape \n",
+    "df_rev_budget.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 49,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array(['Pirates of the Caribbean: On Stranger Tides',\n",
+       "       \"Pirates of the Caribbean: At World's End\",\n",
+       "       'Avengers: Age of Ultron', 'Superman Returns', 'Tangled',\n",
+       "       'John Carter', 'Spider-Man 3', 'The Lone Ranger',\n",
+       "       'The Hobbit: The Battle of the Five Armies',\n",
+       "       'X-Men: Days of Future Past'], dtype=object)"
+      ]
+     },
+     "execution_count": 49,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#now let get the top 10 movies with the highest budgets.\n",
+    "top_budget=df_rev_budget.nlargest(10,columns='budget')['original_title']\n",
+    "top_budget.unique()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Top 10 movies with the highest budgets:\n",
+    " \n",
+    "  * Pirates of the Caribbean: On Stranger Tides\n",
+    "  * Pirates of the Caribbean: At World's End\n",
+    "  * Avengers: Age of Ultron \n",
+    "  * Superman Returns\n",
+    "  * Tangled\n",
+    "  * John Carter \n",
+    "  * Spider-Man 3\n",
+    "  * The Lone Ranger\n",
+    "  * The Hobbit: The Battle of the Five Armies"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 50,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array(['Avatar', 'Star Wars: The Force Awakens', 'Titanic',\n",
+       "       'The Avengers', 'Jurassic World', 'Furious 7',\n",
+       "       'Avengers: Age of Ultron',\n",
+       "       'Harry Potter and the Deathly Hallows: Part 2', 'Frozen',\n",
+       "       'Iron Man 3'], dtype=object)"
+      ]
+     },
+     "execution_count": 50,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# getting the top 10 movies by revenue\n",
+    "top_movies=df_rev_budget.nlargest(10,columns='revenue')['original_title']\n",
+    "top_movies.unique()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "top 10 movies by revenue that also have budget above mean:\n",
+    "  * Avatar \n",
+    "  * Star Wars: The Force Awakens\n",
+    "  * itanic\n",
+    "  * The Avengers\n",
+    "  * Jurassic World\n",
+    "  * Furious 7\n",
+    "  * Avengers: Age of Ultron\n",
+    "  * Harry Potter and the Deathly Hallows: Part 2\n",
+    "  * Frozen\n",
+    "  * Iron Man 3"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "From the results above we can clearly see that the 10 highest budget movies are not on the ones that made high revenues.\n",
+    "This means, even though there is a correlation between the budget and revenue that does not mean high budget means high revenue."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "<a id='conclusions'></a>\n",
+    "## Conclusions\n",
+    "\n",
+    "\n",
+    "From the above exploration, the top ten directors that directed the most succesful movies in terms of revenue and also the movies they directed were classified. I also explored if the genres of the top ten high earning movies are also populary, and I found that not all popular genres form part of the genres for high earning movies in terms of revenue. I went further to explore if high budget implies high revenue, after few explorations I can conclude that even though the budget and revenue have positive correlation but that does not mean movies with high budget will have high revenues.\n",
+    "\n",
+    "There is a lot of data that was missing, and because of that the analysis can be improved by using more data points. another limitation that is present is that, success is measured in revenues while it can be measured using profit made. And so a further investigation can be made with profit calculeted from revenues and budget column, and on top of that the fact that budget may not all be used when making the movie can also affect the profits calculated and so results will have slight inaccuracy.\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 51,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0"
+      ]
+     },
+     "execution_count": 51,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "from subprocess import call\n",
+    "call(['python', '-m', 'nbconvert', 'Investigate_a_Dataset.ipynb'])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
