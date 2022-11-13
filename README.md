@@ -1,5 +1,5 @@
 # Investigate-a-TMDB-Dataset-udacity-NanoDegree
-Here I am investigating a Dataset given in a Udacity Nanodegree project
+Here I investigated a Dataset given in a Udacity Nanodegree project
 
 > **TMDb** dataset consist of the information about  10 thousand movies including their ratings from diferent users for different genres,collected from
 The Movie Database (TMDb).
